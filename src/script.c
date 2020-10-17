@@ -44,7 +44,7 @@ static const struct luaL_Reg threadlib[] = {
     { "__newindex", script_thread_newindex },
     { NULL,         NULL                   }
 };
-
+//create lua script here
 lua_State *script_create(char *file, char *url, char **headers) {
     lua_State *L = luaL_newstate();
     luaL_openlibs(L);
@@ -97,18 +97,18 @@ lua_State *script_create(char *file, char *url, char **headers) {
 
     return L;
 }
-
+//resolve the lua script
 bool script_resolve(lua_State *L, char *host, char *service) {
     lua_getglobal(L, "wrk");
 
     lua_getfield(L, -1, "resolve");
     lua_pushstring(L, host);
     lua_pushstring(L, service);
-    lua_call(L, 2, 0);
+    lua_call(L, 2, 0);//param1:lua stack; param2:param number;param3:return value number
 
     lua_getfield(L, -1, "addrs");
-    size_t count = lua_objlen(L, -1);
-    lua_pop(L, 2);
+    size_t count = lua_objlen(L, -1);//get ip number
+    lua_pop(L, 2);//pop out 2 elements
     return count > 0;
 }
 
@@ -148,33 +148,33 @@ uint64_t script_delay(lua_State *L) {
     lua_pop(L, 1);
     return delay;
 }
-
+//request script
 void script_request(lua_State *L, char **buf, size_t *len) {
     int pop = 1;
     lua_getglobal(L, "request");
     if (!lua_isfunction(L, -1)) {
         lua_getglobal(L, "wrk");
         lua_getfield(L, -1, "request");
-        pop += 2;
+        pop += 2;//pop out 2 params
     }
     lua_call(L, 0, 1);
-    const char *str = lua_tolstring(L, -1, len);
+    const char *str = lua_tolstring(L, -1, len);//get string from stack
     *buf = realloc(*buf, *len);
     memcpy(*buf, str, *len);
     lua_pop(L, pop);
 }
-
+//response script
 void script_response(lua_State *L, int status, buffer *headers, buffer *body) {
-    lua_getglobal(L, "response");
-    lua_pushinteger(L, status);
-    lua_newtable(L);
+    lua_getglobal(L, "response");//get lua pointer
+    lua_pushinteger(L, status);//push data into stack
+    lua_newtable(L);//new table
 
     for (char *c = headers->buffer; c < headers->cursor; ) {
         c = buffer_pushlstring(L, c);
         c = buffer_pushlstring(L, c);
         lua_rawset(L, -3);
     }
-
+    //push data into lua
     lua_pushlstring(L, body->buffer, body->cursor - body->buffer);
     lua_call(L, 3, 0);
 
@@ -444,18 +444,18 @@ static int script_wrk_lookup(lua_State *L) {
     };
     int rc, index = 1;
 
-    const char *host    = lua_tostring(L, -2);
-    const char *service = lua_tostring(L, -1);
-
+    const char *host    = lua_tostring(L, -2);//get string
+    const char *service = lua_tostring(L, -1);//-1 means the top of the stack
+    //transfer domain name to ip address
     if ((rc = getaddrinfo(host, service, &hints, &addrs)) != 0) {
         const char *msg = gai_strerror(rc);
         fprintf(stderr, "unable to resolve %s:%s %s\n", host, service, msg);
         exit(1);
     }
 
-    lua_newtable(L);
+    lua_newtable(L);//new table
     for (struct addrinfo *addr = addrs; addr != NULL; addr = addr->ai_next) {
-        script_addr_clone(L, addr);
+        script_addr_clone(L, addr);//copy
         lua_rawseti(L, -2, index++);
     }
 
@@ -568,9 +568,9 @@ void buffer_append(buffer *b, const char *data, size_t len) {
 void buffer_reset(buffer *b) {
     b->cursor = b->buffer;
 }
-
+//RETURN pointer
 char *buffer_pushlstring(lua_State *L, char *start) {
-    char *end = strchr(start, 0);
-    lua_pushlstring(L, start, end - start);
+    char *end = strchr(start, 0);//get the '\0' position
+    lua_pushlstring(L, start, end - start);//push string into lua
     return end + 1;
 }

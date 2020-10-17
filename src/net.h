@@ -11,7 +11,7 @@ typedef enum {
     ERROR,
     RETRY
 } status;
-
+//define socket struct, to store the information.
 struct sock {
     status ( *connect)(connection *, char *);
     status (   *close)(connection *);
