@@ -24,7 +24,7 @@ SSL_CTX *ssl_init() {
 
     return ctx;
 }
-
+//ssl connect status info
 status ssl_connect(connection *c, char *host) {
     int r;
     SSL_set_fd(c->ssl, c->fd);
@@ -36,7 +36,7 @@ status ssl_connect(connection *c, char *host) {
             default:                   return ERROR;
         }
     }
-    return OK;
+    return OK;//status OK
 }
 
 status ssl_close(connection *c) {
