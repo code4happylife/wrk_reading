@@ -59,7 +59,8 @@
         #endif
     #endif
 #endif
-
+//select is O(N) and epoll is O(1)
+//create driver, setsize is the network event fd number
 aeEventLoop *aeCreateEventLoop(int setsize) {
     aeEventLoop *eventLoop;
     int i;
@@ -446,7 +447,7 @@ int aeWait(int fd, int mask, long long milliseconds) {
         return retval;
     }
 }
-
+//deal with event loop
 void aeMain(aeEventLoop *eventLoop) {
     eventLoop->stop = 0;
     while (!eventLoop->stop) {
